@@ -1,7 +1,6 @@
 package todo
 
 import (
-	"errors"
 	"log"
 )
 
@@ -34,14 +33,16 @@ type List struct {
 	// To set a previously known item (with changes), send it over the Set channel
 	Set chan Item
 
-	items []*Item
+	// Do not modify this list directly. That would violate thread-safety.
+	// Use this for read access only.
+	Items []Item
 }
 
 // Create a new Todo List with no items.
 // Returns an empty list.
 func NewList() *List {
 	l := &List{
-		items: make([]*Item, 0),
+		Items: make([]Item, 0),
 		Add:   make(chan ItemRequest, 5),
 		Set:   make(chan Item, 5),
 	}
@@ -65,12 +66,13 @@ func (l *List) listen() {
 				select {
 				case req.Num <- i:
 				default:
+					log.Printf("Warning: Return Number channel was not ready to recieve. Not sending...")
 				}
 			}
 
 		case it := <-l.Set:
-			if it.Num < len(l.items) {
-				l.items[it.Num] = &it
+			if it.Num < len(l.Items) {
+				l.Items[it.Num] = it
 				log.Printf("Set Item at num %d with done: %t", it.Num, it.Done)
 			} else {
 				log.Printf("Warning: Set Item received out of bouds num: %d", it.Num)
@@ -83,22 +85,12 @@ func (l *List) listen() {
 // Arguments: 
 //	desc - Description of the new todo item
 func (l *List) addItem(desc string) int {
-	i := &Item{
-		Num:  len(l.items),
+	i := Item{
+		Num:  len(l.Items),
 		Desc: desc,
 		Done: false,
 	}
-	l.items = append(l.items, i)
+	l.Items = append(l.Items, i)
 
 	return i.Num
-}
-
-// Get an Item from a list
-// Indexed by i
-func (l *List) Item(i int) (Item, error) {
-	if i >= len(l.items) {
-		return Item{}, errors.New("Index out of range!")
-	}
-
-	return *l.items[i], nil
 }
