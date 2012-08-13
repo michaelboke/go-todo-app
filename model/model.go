@@ -11,7 +11,11 @@ type TodoApp struct {
 	List *todo.List
 }
 
+func NewTodoApp() *TodoApp {
+	return &TodoApp{todo.NewList()}
+}
+
 // Initialize the app's model.
 func Init() {
-	App = &TodoApp{todo.NewList()}
+	App = NewTodoApp()
 }

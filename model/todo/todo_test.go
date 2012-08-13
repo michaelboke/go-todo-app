@@ -34,9 +34,9 @@ func TestList(t *testing.T) {
 	}
 
 	if i1.Num != 1 {
-		t.Error("Second item number is not 1:", i0.Num)
+		t.Error("Second item number is not 1:", i1.Num)
 	} else if i1.Desc != "do that" {
-		t.Error("Second item description is not correct:", i0.Desc)
+		t.Error("Second item description is not correct:", i1.Desc)
 	} else if i1.Done != false {
 		t.Error("Second item done is true!")
 	}
