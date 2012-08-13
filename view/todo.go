@@ -23,5 +23,5 @@ func NewTodo(root string) Todo {
 
 // ServeHTTP function lets Todo view implement http.Handler
 func (t Todo) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	t.Execute(res, model.List)
+	t.Execute(res, model.App.List)
 }

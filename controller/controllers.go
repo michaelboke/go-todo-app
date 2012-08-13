@@ -9,7 +9,7 @@ import (
 )
 
 // Add an item to the list by interpreting a url.Values
-func add(params url.Values) (map[string]interface{}, error) {
+func add(app *model.TodoApp, params url.Values) (map[string]interface{}, error) {
 	desc := params.Get("desc")
 	if desc == "" {
 		return nil, errors.New("Query parameter 'desc' required")
@@ -20,7 +20,7 @@ func add(params url.Values) (map[string]interface{}, error) {
 		Desc: desc,
 		Num:  numReturn,
 	}
-	model.List.Add <- req
+	app.List.Add <- req
 
 	// Wait for the return
 	n := <-numReturn
@@ -30,7 +30,7 @@ func add(params url.Values) (map[string]interface{}, error) {
 }
 
 // Set an item to the done value interpreting a url.Values
-func done(params url.Values) (map[string]interface{}, error) {
+func done(app *model.TodoApp, params url.Values) (map[string]interface{}, error) {
 	nstr := params.Get("num")
 	donestr := params.Get("done")
 
@@ -52,14 +52,14 @@ func done(params url.Values) (map[string]interface{}, error) {
 		return nil, errors.New("Query parameter 'done' must be a boolean: " + err.Error())
 	}
 
-	if int(n) >= len(model.List.Items) {
+	if int(n) >= len(app.List.Items) {
 		return nil, errors.New("Query parameter 'num' out of range!")
 	}
 
 	// Perform the action
-	it := model.List.Items[n]
+	it := app.List.Items[n]
 	it.Done = done
-	model.List.Set <- it
+	app.List.Set <- it
 
 	// Return no error
 	return nil, nil

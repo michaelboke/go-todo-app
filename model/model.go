@@ -4,9 +4,14 @@ package model
 
 import "github.com/yanatan16/go-todo-app/model/todo"
 
-var List *todo.List
+var App *TodoApp
+
+// TodoApp represents the entire model for the Todo App
+type TodoApp struct {
+	List *todo.List
+}
 
 // Initialize the app's model.
 func Init() {
-	List = todo.NewList()
+	App = &TodoApp{todo.NewList()}
 }

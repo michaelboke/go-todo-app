@@ -4,6 +4,7 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/yanatan16/go-todo-app/model"
 	"net/http"
 	"net/url"
 )
@@ -23,11 +24,11 @@ func Init(svr *http.ServeMux) {
 // Returns:
 //	map - Response data to be encoded as JSON
 //	error - An error, if applicable
-type Controller func(url.Values) (map[string]interface{}, error)
+type Controller func(*model.TodoApp, url.Values) (map[string]interface{}, error)
 
 // Make an http handler from a controller
 func (ctrl Controller) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	data, err := ctrl(req.URL.Query())
+	data, err := ctrl(model.App, req.URL.Query())
 	if err != nil {
 		// Respond with an error
 		res.WriteHeader(400)
