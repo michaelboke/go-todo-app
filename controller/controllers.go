@@ -52,13 +52,14 @@ func done(params url.Values) (map[string]interface{}, error) {
 		return nil, errors.New("Query parameter 'done' must be a boolean: " + err.Error())
 	}
 
-	if it, err := model.List.Item(int(n)); err != nil {
-		return nil, err
-	} else {
-		// Perform the action
-		it.Done = done
-		model.List.Set <- it
+	if int(n) >= len(model.List.Items) {
+		return nil, errors.New("Query parameter 'num' out of range!")
 	}
+
+	// Perform the action
+	it := model.List.Items[n]
+	it.Done = done
+	model.List.Set <- it
 
 	// Return no error
 	return nil, nil
