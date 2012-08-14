@@ -27,9 +27,10 @@ GOFMT=gofmt -w
 MODELS := model/todo model
 CONTROLLERS := controller
 VIEWS := view
+APP := .
 
 # List building
-ALL_LIST = $(MODELS) $(CONTROLLERS) $(VIEWS)
+ALL_LIST = $(MODELS) $(CONTROLLERS) $(VIEWS) $(APP)
 
 BUILD_LIST = $(foreach int, $(ALL_LIST), $(int)_build)
 CLEAN_LIST = $(foreach int, $(ALL_LIST), $(int)_clean)

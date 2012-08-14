@@ -1,18 +1,18 @@
 package main
 
 import (
-	"github.com/yanatan16/go-todo-app/model"
-	"github.com/yanatan16/go-todo-app/controller"
-	"github.com/yanatan16/go-todo-app/view"
-	"net/http"
-	"fmt"
 	"flag"
+	"fmt"
+	"github.com/yanatan16/go-todo-app/controller"
+	"github.com/yanatan16/go-todo-app/model"
+	"github.com/yanatan16/go-todo-app/view"
 	"log"
+	"net/http"
 	"time"
 )
 
 var (
-	port int
+	port         int
 	templateRoot string
 )
 
@@ -22,10 +22,10 @@ func Start() {
 	// Instantiate an http.Server
 	server := &http.Server{
 		Addr:           fmt.Sprintf(":%d", port),
-		Handler: mux,
+		Handler:        mux,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,		
+		MaxHeaderBytes: 1 << 20,
 	}
 
 	// Model

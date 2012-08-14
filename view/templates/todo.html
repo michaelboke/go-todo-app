@@ -5,8 +5,10 @@
 
 	<!-- Libraries -->
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+	<!--
 	<script src="/static/libs/underscore{{if .Prod}}-min{{end}}.js" type="text/javascript"></script>
 	<script src="/static/libs/backbone{{if .Prod}}-min{{end}}.js" type="text/javascript"></script>
+-->
 
 	<!-- Scripts -->
 	<script src="/static/js/todo.js" type="text/javascript"></script>
@@ -19,19 +21,22 @@
 	</script>
 </head>
 <body>
-	<h1>Go Todo Web App</h1>
-   	<p id="msg">A simple todo app written in Go.</p>
-   	<ul id="todo-list">
-   		{{range .Items}}
-   		<li class="todo-item" id="item-{{.Num}}">
-   			<span class="{{if .Done}}done{{else}}not-done{{end}}"></span>
-   			<span class="desc">{{.Desc}}</span>
-   		</li>
-   		{{end}}
-   		<li id="new-item">
-   			<input type="text" id="new-desc" />
-   		</li>
-   	</ul>
-
+	<div id="container">
+		<h1>Go Todo Web App</h1>
+	   	<p id="msg">A simple todo app written in Go.</p>
+	   	{{with .List}}
+	   	<ul id="todo-list">
+	   		{{range .Items}}
+	   		<li class="todo-item" class="{{if .Done}}done{{else}}not-done{{end}}" data-num="{{.Num}}" data-done="{{printf %t .Done}}">
+	   			<input type="checkbox" class="done-toggle" {{if .Done}}checked="checked"{{end}} />
+	   			<p class="desc">{{.Desc}}</p>
+	   		</li>
+	   		{{end}}
+	   		<li id="new-item">
+	   			<input type="text" id="new-desc" size="50" />
+	   		</li>
+	   	</ul>
+	   	{{end}}
+	</div>
 </body>
 </html>

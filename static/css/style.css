@@ -1,3 +1,30 @@
+/* Include Reset */
+@include url("reset.css")
+
 body {
 	background-color: #ddd;
+	color: #000;
+	font-family: Palatino, "Times New Roman", Serif;
+	font-size: 11;
+}
+
+#container {
+	width: 1000px;
+	background-color: #fff;
+}
+
+#todo-list {
+	padding-top: 10px;
+}
+
+.todo-item {
+	margin: 3px;
+}
+
+.done {
+	background-color: PaleGreen;
+}
+
+.not-done {
+	background-color: LightCoral;
 }
