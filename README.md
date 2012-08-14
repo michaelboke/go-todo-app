@@ -3,6 +3,8 @@ Go Todo Web App
 
 A simple todo app written in Go.
 
+Build the Web App with go-gb. `go get github.com/skelterjohn/go-gb/gb`
+
 License
 =======
 Revised BSD License
