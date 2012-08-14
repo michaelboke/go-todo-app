@@ -14,5 +14,5 @@ import (
 func Init(svr *http.ServeMux, templateRoot string) {
 	t := NewTodo(model.App, templateRoot)
 
-	svr.Handle("/index.html", http.Handler(t))
+	svr.Handle("/", http.Handler(t))
 }
