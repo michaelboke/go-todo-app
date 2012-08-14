@@ -41,19 +41,17 @@ FMT_TEST = $(foreach int, $(ALL_LIST), $(int)_fmt)
 
 .PHONY: $(CLEAN_LIST) $(TEST_LIST) $(FMT_LIST) $(INSTALL_LIST) $(BUILD_LIST) $(IREF_LIST)
 
-all: build
+go-all: build
 
-build: $(BUILD_LIST)
+go-build: $(BUILD_LIST)
 
-clean: $(CLEAN_LIST)
+go-clean: $(CLEAN_LIST)
 
-install: $(INSTALL_LIST)
+go-install: $(INSTALL_LIST)
 
-test: $(TEST_LIST)
+go-test: $(TEST_LIST)
 
-iref: $(IREF_LIST)
-
-fmt: $(FMT_TEST)
+go-fmt: $(FMT_TEST)
 
 $(BUILD_LIST): %_build: %_fmt %_iref
 	$(GOBUILD) ./$*
