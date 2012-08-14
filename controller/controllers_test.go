@@ -8,7 +8,7 @@ import (
 )
 
 func TestControllers(t *testing.T) {
-	app := model.NewTodoApp()
+	app := model.NewTodoApp(false)
 
 	// Add 2 items
 	ret, err := add(app, url.Values{"desc": {"do this"}})

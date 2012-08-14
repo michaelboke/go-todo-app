@@ -27,7 +27,7 @@
 	   	{{with .List}}
 	   	<ul id="todo-list">
 	   		{{range .Items}}
-	   		<li class="todo-item" class="{{if .Done}}done{{else}}not-done{{end}}" data-num="{{.Num}}" data-done="{{printf %t .Done}}">
+	   		<li class="todo-item" class="{{if .Done}}done{{else}}not-done{{end}}" data-num="{{.Num}}" data-done="{{printf "%t" .Done}}">
 	   			<input type="checkbox" class="done-toggle" {{if .Done}}checked="checked"{{end}} />
 	   			<p class="desc">{{.Desc}}</p>
 	   		</li>

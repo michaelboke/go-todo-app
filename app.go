@@ -13,6 +13,7 @@ import (
 
 var (
 	port         int
+	prod         bool
 	templateRoot string
 )
 
@@ -29,7 +30,7 @@ func Start() {
 	}
 
 	// Model
-	model.Init()
+	model.Init(prod)
 
 	// View
 	view.Init(mux, templateRoot)
@@ -45,7 +46,8 @@ func main() {
 
 	// Parse out the command line arguments
 	flag.IntVar(&port, "port", 8080, "Port to listen on.")
-	flag.StringVar(&templateRoot, "root", "./view/templates", "Template file root directory")
+	flag.StringVar(&templateRoot, "root", "./view/templates", "Template root directory.")
+	flag.BoolVar(&prod, "prod", false, "Production")
 	flag.Parse()
 
 	// Run the server
