@@ -38,7 +38,7 @@ func TestTemplates(t *testing.T) {
 	files := findFiles(templateRoot)
 
 	for _, f := range files {
-		_, err := mustache.Parse(f)
+		_, err := mustache.ParseFile(f)
 
 		// Assure there are no errors
 		if err != nil {

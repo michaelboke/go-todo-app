@@ -16,7 +16,7 @@ import (
 func Init(svr *web.Server, templateRoot string) {
 	svr.Get("/",
 		TemplateHandler(
-			templateRoot+"/todo.html",
+			templateRoot+"/todo.html.mustache",
 			model.App))
 }
 
