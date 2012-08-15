@@ -28,4 +28,4 @@ _testmain.go
 *.sublime-*
 
 # Binaries
-./go-todo-app
+go-todo-app
