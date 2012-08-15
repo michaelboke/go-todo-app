@@ -4,15 +4,34 @@ package view
 
 import (
 	"github.com/yanatan16/go-todo-app/model"
-	"net/http"
+	"github.com/hoisie/web"
+	"github.com/hoisie/mustache"
+	"log"
 )
 
 // Initalize the app's views.
 // Arguments:
 //	svr - http server mux to listen on
 //  template_root - Root directory for templates
-func Init(svr *http.ServeMux, templateRoot string) {
-	t := NewTodo(model.App, templateRoot)
+func Init(svr *web.Server, templateRoot string) {
+	svr.Get("/", 
+		TemplateHandler(
+			templateRoot + "/todo.html",
+			model.App))
+}
 
-	svr.Handle("/", http.Handler(t))
+// Create a web handler using a mustache template
+// Arguments:
+//	fn is a file name
+// 	data is the data that will be used to render the template
+// Returns: Web handler
+func TemplateHandler(fn string, data interface{}) func (*web.Context, string) {
+	t, err := mustache.ParseFile(fn)
+	if err != nil {
+		log.Fatalf("Error parsing %s: %s", fn, err.Error())
+	}
+
+	return func (ctx *web.Context, val string) {
+		t.Render(data)
+	}
 }

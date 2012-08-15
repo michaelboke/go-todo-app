@@ -8,9 +8,7 @@ import (
 	"github.com/yanatan16/go-todo-app/view"
 	"io/ioutil"
 	"log"
-	"net/http"
-	"strings"
-	"time"
+	"github.com/hoisie/web"
 )
 
 var (
@@ -21,33 +19,24 @@ var (
 )
 
 func Start() {
-	mux := http.NewServeMux()
-
-	// Instantiate an http.Server
-	server := &http.Server{
-		Addr:           fmt.Sprintf(":%d", port),
-		Handler:        mux,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
-	}
+	server := web.NewServer()
 
 	// Model
 	model.Init(prod)
 
 	// View
-	view.Init(mux, templateRoot)
+	view.Init(server, templateRoot)
 
 	// Controller
-	controller.Init(mux)
+	controller.Init(server)
 
 	// Static files (non-prod)
 	if serveStaticFiles {
-		ServeStatic("./static", mux)
+		ServeStatic("./static", server)
 	}
 
 	log.Printf("Now starting Todo App Server on port %d...", port)
-	log.Fatal(server.ListenAndServe())
+	server.Run(fmt.Sprintf("0.0.0.0:%d", port))
 }
 
 func main() {
@@ -69,22 +58,17 @@ func main() {
 	Start()
 }
 
-func ServeStatic(root string, mux *http.ServeMux) {
-	mux.Handle("/static", http.HandlerFunc(
-		func(res http.ResponseWriter, req *http.Request) {
-			fn := root + "/" + strings.TrimLeft(req.URL.Path, "/static")
+func ServeStatic(root string, svr *web.Server) {
+	svr.Get("/static(.*)", 
+		func(ctx *web.Context, path string) {
+			fn := root + path
 			data, err := ioutil.ReadFile(fn)
 			if err != nil {
-				res.WriteHeader(404)
-				res.Write([]byte("File not found!"))
+				ctx.NotFound("File not found!")
 				log.Println("Could not read file!", err)
 				return
 			}
 
-			_, err = res.Write(data)
-			if err != nil {
-				log.Println("Could not write data back.", fn, err)
-			}
-
-		}))
+			ctx.WriteString(string(data))
+		})
 }
