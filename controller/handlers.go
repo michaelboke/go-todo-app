@@ -4,8 +4,8 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/yanatan16/go-todo-app/model"
 	"github.com/hoisie/web"
+	"github.com/yanatan16/go-todo-app/model"
 )
 
 // Initialize the app's controllers

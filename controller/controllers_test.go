@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/yanatan16/go-todo-app/model"
-	"net/url"
 	"testing"
 	"time"
 )
@@ -11,18 +10,26 @@ func TestControllers(t *testing.T) {
 	app := model.NewTodoApp(false)
 
 	// Add 2 items
-	ret, err := add(app, url.Values{"desc": {"do this"}})
+	ret, err := add(app, map[string]string{"desc": "do this"})
 	if err != nil {
 		t.Error("Error adding first item to list!", err)
-	} else if ret["num"] != 0 {
-		t.Error("Return value num not equal to 0!", ret["num"])
+	} else {
+		if data, ok := ret.(map[string]interface{}); !ok {
+			t.Error("Return value not correct type!", ret)
+		} else if data["num"] != 0 {
+			t.Error("Return value num not equal to 0!", data["num"])
+		}
 	}
 
-	ret, err = add(app, url.Values{"desc": {"do that"}})
+	ret, err = add(app, map[string]string{"desc": "do that"})
 	if err != nil {
 		t.Error("Error adding second item to list!", err)
-	} else if ret["num"] != 1 {
-		t.Error("Return value num not equal to 1!", ret["num"])
+	} else {
+		if data, ok := ret.(map[string]interface{}); !ok {
+			t.Error("Return value not correct type!", ret)
+		} else if data["num"] != 1 {
+			t.Error("Return value num not equal to 1!", data["num"])
+		}
 	}
 
 	i0 := app.List.Items[0]
@@ -44,7 +51,10 @@ func TestControllers(t *testing.T) {
 		t.Error("Second item done is true!")
 	}
 
-	done(app, url.Values{"num": {"0"}, "done": {"true"}})
+	_, err = done(app, map[string]string{"num": "0", "done": "true"})
+	if err != nil {
+		t.Error("Error executing first done.", err)
+	}
 
 	// Wait for update
 	<-time.After(10 * time.Millisecond)
@@ -55,7 +65,11 @@ func TestControllers(t *testing.T) {
 	}
 
 	// Check for a bad set
-	done(app, url.Values{"num": {"1231321"}, "done": {"false"}})
+	_, err = done(app, map[string]string{"num": "1231321", "done": "false"})
+	if err == nil {
+		t.Error("No error when expected one for second done.")
+	}
+
 	<-time.After(10 * time.Millisecond)
 	if app.List.Items[1].Num != 1 {
 		t.Error("Second item number changed with bad Set command:", app.List.Items[1].Num)

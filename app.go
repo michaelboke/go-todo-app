@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/hoisie/web"
 	"github.com/yanatan16/go-todo-app/controller"
 	"github.com/yanatan16/go-todo-app/model"
 	"github.com/yanatan16/go-todo-app/view"
 	"io/ioutil"
 	"log"
-	"github.com/hoisie/web"
 )
 
 var (
@@ -59,7 +59,7 @@ func main() {
 }
 
 func ServeStatic(root string, svr *web.Server) {
-	svr.Get("/static(.*)", 
+	svr.Get("/static(.*)",
 		func(ctx *web.Context, path string) {
 			fn := root + path
 			data, err := ioutil.ReadFile(fn)
