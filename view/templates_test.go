@@ -1,7 +1,7 @@
 package view
 
 import (
-	"html/template"
+	"github.com/hoisie/mustache"
 	"os"
 	"testing"
 )
@@ -37,10 +37,12 @@ func findFiles(dir string) []string {
 func TestTemplates(t *testing.T) {
 	files := findFiles(templateRoot)
 
-	_, err := template.ParseFiles(files...)
+	for _, f := range files {
+		_, err := mustache.ParseFile(f)
 
-	// Assure there are no errors
-	if err != nil {
-		t.Error("Error parsing template!", err)
+		// Assure there are no errors
+		if err != nil {
+			t.Error("Error parsing template!", f, err)
+		}
 	}
 }

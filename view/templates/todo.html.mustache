@@ -1,0 +1,44 @@
+<html>
+<head>
+	<title>Go Todo Web App</title>
+	<link rel="stylesheet" TYPE="text/css" HREF="static/css/style.css">
+
+	<!-- Libraries -->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+	<!--
+	<script src="/static/libs/underscore{{if .Prod}}-min{{end}}.js" type="text/javascript"></script>
+	<script src="/static/libs/backbone{{if .Prod}}-min{{end}}.js" type="text/javascript"></script>
+-->
+
+	<!-- Scripts -->
+	<script src="/static/js/todo.js" type="text/javascript"></script>
+
+	<!-- Initialization -->
+	<script>
+		$(document).ready(function() {
+			Todo.init();
+		});
+	</script>
+</head>
+<body>
+	<div id="container">
+		<h1>Go Todo Web App</h1>
+	   	<p id="msg">A simple todo app written in Go.</p>
+	   	{{#List}}
+	   	<ul id="todo-list">
+	   		{{#Items}}
+	   		<li class="todo-item {{#Done}}done{{/Done}}{{^Done}}not-done{{/Done}}" 
+	   		data-num="{{Num}}" 
+	   		data-done="{{#Done}}true{{/Done}}{{^Done}}false{{/Done}}">
+	   			<input type="checkbox" class="done-toggle" {{#Done}}checked="checked"{{/Done}} />
+	   			<p class="desc">{{Desc}}</p>
+	   		</li>
+	   		{{/Items}}
+	   		<li id="new-item">
+	   			<input type="text" id="new-desc" size="50" />
+	   		</li>
+	   	</ul>
+	   	{{/List}}
+	</div>
+</body>
+</html>
