@@ -8,15 +8,27 @@ Todo = function() {
 	// @param e jQuery Event object
 	var toggle_done = function(e) {
 		var that = $(e.target);
-		var li = that.parent();
-		var done = !(li.data('done') === 'true');
+		var li, ipt;
+		if (that[0].tagName === 'LI') {
+			li = that;
+			ipt = that.find('input');
+		} else if (that[0].tagName === 'INPUT') {
+			li = that.parent();
+			ipt = that;
+		} else {
+			return
+		}
+
+		var done = !li.data('done');
 
 		if (done) {
 			li.removeClass("not-done").addClass("done");
-			li.data('done', 'true');
+			li.data('done', true);
+			ipt.attr('checked','checked');
 		} else {
 			li.removeClass("done").addClass("not-done");
-			li.data('done', 'false');
+			li.data('done', false);
+			ipt.removeAttr('checked');
 		}
 
 		$.ajax({
@@ -49,8 +61,6 @@ Todo = function() {
 						.addClass("done-toggle")).append(
 					$("<p>").addClass("desc").append(
 					desc)).on('click', toggle_done));
-			},
-			done: function() {
 				that.val('');
 			}
 		});

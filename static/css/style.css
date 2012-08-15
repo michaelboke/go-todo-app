@@ -15,10 +15,15 @@ body {
 
 #todo-list {
 	padding-top: 10px;
+	list-style: none;
 }
 
 .todo-item {
 	margin: 3px;
+}
+
+.done-toggle {
+	float: left;
 }
 
 .done {
