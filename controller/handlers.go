@@ -26,8 +26,8 @@ func Init(svr *web.Server) {
 type Controller func(*model.TodoApp, map[string]string) (interface{}, error)
 
 // Make an web handler from a controller
-func MakeHandler(ctrl Controller) func(*web.Context, string) {
-	return func(ctx *web.Context, val string) {
+func MakeHandler(ctrl Controller) func(*web.Context) {
+	return func(ctx *web.Context) {
 		data, err := ctrl(model.App, ctx.Params)
 		if err != nil {
 			// Respond with an error
@@ -44,6 +44,7 @@ func MakeHandler(ctrl Controller) func(*web.Context, string) {
 				return
 			}
 
+			ctx.SetHeader("Content-Type", "application/json", true)
 			ctx.WriteString(string(enc))
 		} else {
 			// No response included

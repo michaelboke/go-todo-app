@@ -27,11 +27,10 @@
 	   	{{#List}}
 	   	<ul id="todo-list">
 	   		{{#Items}}
-	   		<li class="todo-item" 
-	   		class="{{#Done}}done{{/Done}}{{^Done}}not-done{{/Done}}" 
+	   		<li class="todo-item {{#Done}}done{{/Done}}{{^Done}}not-done{{/Done}}" 
 	   		data-num="{{Num}}" 
 	   		data-done="{{#Done}}true{{/Done}}{{^Done}}false{{/Done}}">
-	   			<input type="checkbox" class="done-toggle" {{if .Done}}checked="checked"{{end}} />
+	   			<input type="checkbox" class="done-toggle" {{#Done}}checked="checked"{{/Done}} />
 	   			<p class="desc">{{Desc}}</p>
 	   		</li>
 	   		{{/Items}}

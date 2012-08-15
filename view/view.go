@@ -25,13 +25,13 @@ func Init(svr *web.Server, templateRoot string) {
 //	fn is a file name
 // 	data is the data that will be used to render the template
 // Returns: Web handler
-func TemplateHandler(fn string, data interface{}) func(*web.Context, string) {
+func TemplateHandler(fn string, data interface{}) func(*web.Context) {
 	t, err := mustache.ParseFile(fn)
 	if err != nil {
 		log.Fatalf("Error parsing %s: %s", fn, err.Error())
 	}
 
-	return func(ctx *web.Context, val string) {
-		t.Render(data)
+	return func(ctx *web.Context) {
+		ctx.WriteString(t.Render(data))
 	}
 }

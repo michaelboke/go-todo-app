@@ -16,6 +16,7 @@ var (
 	prod             bool
 	templateRoot     string
 	serveStaticFiles bool
+	useCGI           bool
 )
 
 func Start() {
@@ -36,6 +37,9 @@ func Start() {
 	}
 
 	log.Printf("Now starting Todo App Server on port %d...", port)
+	if useCGI {
+		server.RunFcgi(fmt.Sprintf("0.0.0.0:%d", port))
+	}
 	server.Run(fmt.Sprintf("0.0.0.0:%d", port))
 }
 
@@ -46,10 +50,11 @@ func main() {
 	flag.StringVar(&templateRoot, "root", "./view/templates", "Template root directory.")
 	flag.BoolVar(&prod, "prod", false, "Production")
 	flag.BoolVar(&serveStaticFiles, "static", false, "Serve Static files from Go")
+	flag.BoolVar(&useCGI, "cgi", false, "User FastCGI")
 	flag.Parse()
 
 	// Correct conflicts
-	serveStaticFiles = prod && serveStaticFiles // No serving static in prod
+	serveStaticFiles = !prod && serveStaticFiles // No serving static in prod
 	if port == 8080 && prod {
 		port = 80 // Default port is 80 in prod
 	}
@@ -62,6 +67,7 @@ func ServeStatic(root string, svr *web.Server) {
 	svr.Get("/static(.*)",
 		func(ctx *web.Context, path string) {
 			fn := root + path
+			log.Printf("Serving static file %s", fn)
 			data, err := ioutil.ReadFile(fn)
 			if err != nil {
 				ctx.NotFound("File not found!")
