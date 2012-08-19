@@ -2,8 +2,8 @@ package todo
 
 import (
 	"encoding/json"
-	"testing"
 	"reflect"
+	"testing"
 )
 
 func checkErrors(t *testing.T, i interface{}, err error) Item {

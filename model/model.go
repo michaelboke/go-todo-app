@@ -3,7 +3,8 @@
 package model
 
 import (
-	"github.com/yanatan16/gobone"
+	"github.com/hoisie/web"
+	"github.com/yanatan16/go-todo-app/helpers"
 	"github.com/yanatan16/go-todo-app/model/todo"
 )
 
@@ -27,5 +28,5 @@ func NewTodoApp() *TodoApp {
 func Init(svr *web.Server) {
 	App = NewTodoApp()
 
-	gobone.BindController(svr, "/todo/item", App.List)
+	helpers.BindController(svr, "/todo/list", App.List)
 }
