@@ -1,69 +1,72 @@
 package todo
 
 import (
+	"encoding/json"
 	"testing"
-	"time"
+	"reflect"
 )
+
+func checkErrors(t *testing.T, i interface{}, err error) Item {
+	if err != nil {
+		t.Fatal("Error creating item:", i, err)
+	}
+
+	it, ok := i.(Item)
+	if !ok {
+		t.Fatal("Error casting item:", i)
+	}
+
+	return it
+}
+
+func TestJsonEncoding(t *testing.T) {
+	it := Item{}
+	_, err := json.Marshal(it)
+	if err != nil {
+		t.Error("Item is not json serializable!")
+	}
+}
 
 func TestList(t *testing.T) {
 	l := NewList()
-	key := make(chan int)
 
 	// Add 2 items
-	l.Add <- ItemRequest{"do this", nil}
-	l.Add <- ItemRequest{"do that", key}
-
-	select {
-	case n := <-key:
-		if n != 1 {
-			t.Errorf("Adding item did not return n == 1: %d", n)
-		}
-	case <-time.After(time.Second / 2):
-		t.Error("Adding item did not respond with key after timeout!")
+	iti, err := l.Create(`{"desc":"do this"}`)
+	it1 := checkErrors(t, iti, err)
+	if it1.Desc != "do this" {
+		t.Error("First item does not have correct description.")
+	} else if it1.Done {
+		t.Error("First item is set to done!")
 	}
 
-	i0 := l.Items[0]
-	i1 := l.Items[1]
-
-	if i0.Num != 0 {
-		t.Error("First item number is not 0:", i0.Num)
-	} else if i0.Desc != "do this" {
-		t.Error("First item description is not correct:", i0.Desc)
-	} else if i0.Done != false {
-		t.Error("First item done is true!")
+	iti, err = l.Create(`{"desc":"do that"}`)
+	it2 := checkErrors(t, iti, err)
+	if it2.Desc != "do that" {
+		t.Error("Second item does not have correct description.")
+	} else if it2.Done {
+		t.Error("Second item is set to done!")
 	}
 
-	if i1.Num != 1 {
-		t.Error("Second item number is not 1:", i1.Num)
-	} else if i1.Desc != "do that" {
-		t.Error("Second item description is not correct:", i1.Desc)
-	} else if i1.Done != false {
-		t.Error("Second item done is true!")
+	if it1.Id == it2.Id {
+		t.Error("Items 1 and 2 have the same id!")
 	}
 
-	i0.Done = true
-	l.Set <- i0
-
-	// Wait for update
-	<-time.After(10 * time.Millisecond)
-
-	i0p := l.Items[0]
-	if i0p.Done != true {
-		t.Error("First item did not update done to true!")
+	iri1, err := l.Read(it1.Id)
+	ir1 := checkErrors(t, iri1, err)
+	if !reflect.DeepEqual(ir1, it1) {
+		t.Error("Read value for item 1 is not right:", it1, ir1)
 	}
 
-	// Check for a bad set
-	i1.Num = 1231321
-	l.Set <- i1
-	<-time.After(10 * time.Millisecond)
-	if l.Items[1].Num != 1 {
-		t.Error("Second item number changed with bad Set command:", l.Items[1].Num)
+	iui1, err := l.Update(it1.Id, `{"done":true}`)
+	checkErrors(t, iui1, err)
+
+	err = l.Delete(it2.Id)
+	if err != nil {
+		t.Error("Error deleting item 2", err)
 	}
 
-	// Add an item with a channel return but don't listen on it
-	l.Add <- ItemRequest{"now what", key}
-	<-time.After(10 * time.Millisecond)
-	if len(l.Items) != 3 {
-		t.Error("Item was not added after Item request with no waiting receiver for key chan")
+	_, err = l.Read(it2.Id)
+	if err == nil {
+		t.Error("Should of had an error reading item 2 after delete!")
 	}
 }

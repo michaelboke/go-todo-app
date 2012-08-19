@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/yanatan16/gobone"
 	"github.com/yanatan16/go-todo-app/model/todo"
 )
 
@@ -11,21 +12,20 @@ var App *TodoApp
 
 // TodoApp represents the entire model for the Todo App
 type TodoApp struct {
-	// Production Flag
-	Prod bool
 	// Actual todo list model
 	List *todo.List
 }
 
 // Create a new Todo app model.
-func NewTodoApp(prod bool) *TodoApp {
+func NewTodoApp() *TodoApp {
 	return &TodoApp{
-		Prod: prod,
 		List: todo.NewList(),
 	}
 }
 
 // Initialize the app's model.
-func Init(prod bool) {
-	App = NewTodoApp(prod)
+func Init(svr *web.Server) {
+	App = NewTodoApp()
+
+	gobone.BindController(svr, "/todo/item", App.List)
 }

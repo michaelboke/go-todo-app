@@ -1,50 +1,36 @@
 package todo
 
 import (
-	"log"
+	"encoding/json"
+	"errors"
+	"fmt"
 )
 
 // A Todo Item with a description, number and done boolean
 type Item struct {
 	// The index in the Todo List
-	Num int
+	Id string
 	// A description of the item
 	Desc string
 	// Whether the item is done or not
 	Done bool
 }
 
-// An ItemRequest is how one adds items to a list.
-type ItemRequest struct {
-	// Description of the new item.
-	Desc string
-	// Once the request is processed, the corresponding num will
-	// be sent back over the channel Num (if not nil)
-	// Note that the listener will not wait for syncing on this channel.
-	// It should be bufferred if the receiver is not waiting for it.
-	Num chan<- int
-}
-
 // A Todo List contain a number of items
 // It is thread-safe, because all changes use channels
 type List struct {
-	// To add a new item, send the items description over the Add channel
-	Add chan ItemRequest
-	// To set a previously known item (with changes), send it over the Set channel
-	Set chan Item
-
-	// Do not modify this list directly. That would violate thread-safety.
-	// Use this for read access only.
-	Items []Item
+	exec    chan func()
+	items   map[string]Item
+	counter int
 }
 
 // Create a new Todo List with no items.
 // Returns an empty list.
 func NewList() *List {
 	l := &List{
-		Items: make([]Item, 0),
-		Add:   make(chan ItemRequest, 5),
-		Set:   make(chan Item, 5),
+		exec:    make(chan func(), 10),
+		items:   make(map[string]Item),
+		counter: 0,
 	}
 
 	// Start listening for updates
@@ -56,41 +42,130 @@ func NewList() *List {
 // Listen for updates on the channels and update the list
 // when necessary
 func (l *List) listen() {
-	for {
-		select {
-		case req := <-l.Add:
-			i := l.addItem(req.Desc)
-			log.Printf("Added item: num %d, desc: %s", i, req.Desc)
-			if req.Num != nil {
-				// Perform a send over Num or break
-				select {
-				case req.Num <- i:
-				default:
-					log.Printf("Warning: Return Number channel was not ready to recieve. Not sending...")
-				}
-			}
-
-		case it := <-l.Set:
-			if it.Num < len(l.Items) {
-				l.Items[it.Num] = it
-				log.Printf("Set Item at num %d with done: %t", it.Num, it.Done)
-			} else {
-				log.Printf("Warning: Set Item received out of bouds num: %d", it.Num)
-			}
-		}
+	for f := range l.exec {
+		f()
 	}
 }
 
 // Add a new todo item with a description
 // Arguments: 
 //	desc - Description of the new todo item
-func (l *List) addItem(desc string) int {
-	i := Item{
-		Num:  len(l.Items),
-		Desc: desc,
-		Done: false,
-	}
-	l.Items = append(l.Items, i)
+func (l *List) createItem(desc string) Item {
 
-	return i.Num
+	its := make(chan Item)
+	l.exec <- func() {
+		id := l.counter
+		l.counter += 1
+
+		it := Item{
+			Id:   fmt.Sprintf("%d", id),
+			Desc: desc,
+			Done: false,
+		}
+
+		l.items[it.Id] = it
+		its <- it
+	}
+
+	return <-its
+}
+
+func (l *List) getItem(id string) (it Item, err error) {
+	its := make(chan Item)
+	errs := make(chan error)
+
+	l.exec <- func() {
+		it, ok := l.items[id]
+		if !ok {
+			errs <- errors.New("id not valid")
+		} else {
+			its <- it
+		}
+	}
+
+	select {
+	case it = <-its:
+		err = nil
+	case err = <-errs:
+		it = Item{}
+	}
+	return it, err
+}
+
+func (l *List) updateItem(id string, it Item) (Item, error) {
+	suc := make(chan bool)
+	errs := make(chan error)
+
+	l.exec <- func() {
+		_, ok := l.items[id]
+		if !ok {
+			errs <- errors.New("id not valid")
+		} else {
+			l.items[id] = it
+			suc <- true
+		}
+	}
+
+	var err error
+	select {
+	case <-suc:
+	case err = <-errs:
+	}
+
+	return it, err
+}
+
+func (l *List) deleteItem(id string) {
+	l.exec <- func() {
+		delete(l.items, id)
+	}
+}
+
+// Create an item
+// attr is a json-formatted string of attributes
+// Return a json-formattable object of all model attributes
+func (l *List) Create(attr string) (interface{}, error) {
+	itreq := make(map[string]string)
+	err := json.Unmarshal([]byte(attr), &itreq)
+	if err != nil {
+		return nil, err
+	}
+
+	desc, ok := itreq["desc"]
+	if !ok {
+		return nil, errors.New("Create request requires 'desc' attribute.")
+	}
+
+	it := l.createItem(desc)
+
+	return it, nil
+}
+
+// Read an item
+// ID may be empty string
+// Return a json-formattable object of all model attributes
+func (l *List) Read(id string) (interface{}, error) {
+	return l.getItem(id)
+}
+
+// Update a model object based on parameters. 
+// ID is required and will be non-empty
+// attr is a json-formatted string of attributes
+// Return a json-formattable object of updated model attributes
+// If no attributes other than the updated ones changed, it is acceptable to return nil
+func (l *List) Update(id string, attr string) (interface{}, error) {
+	it := Item{}
+	err := json.Unmarshal([]byte(attr), &it)
+	if err != nil {
+		return nil, err
+	}
+
+	return l.updateItem(id, it)
+}
+
+// Delete a model object.
+// ID is required and will be non-empty
+func (l *List) Delete(id string) error {
+	l.deleteItem(id)
+	return nil
 }
