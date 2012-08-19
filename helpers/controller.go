@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/hoisie/web"
 	"io/ioutil"
+	"log"
 )
 
 // A Controller for a corresponding Backbone Model object.
@@ -72,6 +73,7 @@ func BindController(svr *web.Server, path string, ctrl Controller) {
 			ctx.writeError(err)
 			return
 		}
+		log.Println("body: ", body)
 
 		ret, err := ctrl.Create(body)
 		if err != nil {
@@ -79,6 +81,7 @@ func BindController(svr *web.Server, path string, ctrl Controller) {
 			return
 		}
 
+		log.Println("ret: ", ret)
 		ctx.writeJson(ret)
 	})
 
@@ -90,7 +93,8 @@ func BindController(svr *web.Server, path string, ctrl Controller) {
 			ctx.writeError(err)
 			return
 		}
-
+	
+		log.Println("ret: ", ret)
 		ctx.writeJson(ret)
 	})
 
@@ -104,6 +108,8 @@ func BindController(svr *web.Server, path string, ctrl Controller) {
 			return
 		}
 
+		log.Println("body: ", body)
+
 		ret, err := ctrl.Update(id, body)
 		if err != nil {
 			ctx.writeError(err)
@@ -112,6 +118,7 @@ func BindController(svr *web.Server, path string, ctrl Controller) {
 
 		// Accept nil responses
 		if ret != nil {
+			log.Println("ret: ", ret)
 			ctx.writeJson(ret)
 		} else {
 			ctx.NotModified()

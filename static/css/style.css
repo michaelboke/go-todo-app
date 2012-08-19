@@ -13,12 +13,12 @@ body {
 	background-color: #fff;
 }
 
-#todo-list {
+#todo-list ul {
 	padding-top: 10px;
 	list-style: none;
 }
 
-.todo-item {
+#todo-list li {
 	margin: 3px;
 }
 

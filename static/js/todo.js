@@ -1,77 +1,110 @@
-//
-// Todo Module
-//
 
-Todo = function() {
+(function($){
 
-	// Toggle a todo list element to done
-	// @param e jQuery Event object
-	var toggle_done = function(e) {
-		var that = $(e.target);
-		var li, ipt;
-		if (that[0].tagName === 'LI') {
-			li = that;
-			ipt = that.find('input');
-		} else if (that[0].tagName === 'INPUT') {
-			li = that.parent();
-			ipt = that;
-		} else {
-			return
-		}
+    var Item = Backbone.Model.extend({
+        url: "/todo/list",
+        defaults: {
+            id: '-1',
+            desc: '',
+            done: false
+        }
+    });
 
-		var done = !li.data('done');
+    var List = Backbone.Collection.extend({
+        url: '/todo/list',
+        model: Item
+    });
 
-		if (done) {
-			li.removeClass("not-done").addClass("done");
-			li.data('done', true);
-			ipt.attr('checked','checked');
-		} else {
-			li.removeClass("done").addClass("not-done");
-			li.data('done', false);
-			ipt.removeAttr('checked');
-		}
+    var ItemView = Backbone.View.extend({
+        tagName: 'li',
+        events: {
+            'click input.done-toggle': 'done'
+        },
+        initialize: function() {
+            _.bindAll(this, 'render', 'unrender', 'done', 'remove');
 
-		$.ajax({
-			url: "/done",
-			method: "get",
-			data: {
-				num: li.data('num'),
-				done: done
-			}
-		});
-	};
+            this.model.bind('done', this.render);
+            this.model.bind('remove', this.unrender);
+        },
+        render: function() {
+            var input = $('<input>').attr('type','checkbox');
+            var p = $('<p>').append(this.model.get('desc'));
+            if (this.model.get('done')) {
+                input.attr('checked','checked');
+                $(this.el).addClass('done')
+            } else {
+                $(this.el).addClass('not-done')
+            }
+            $(this.el).append(input).append(p);
+            return this; // for chaining
+        },
+        unrender: function() {
+            $(this.el).remove();
+        },
+        done: function() {
+            var swapped = {
+                done: !this.model.get('done')
+            };
+            this.model.update(swapped);
+        },
+        remove: function() {
+            this.model.delete();
+        }
+    });
 
-	// Add an item to a todo list
-	// @param e jQuery Event object
-	var add_item = function(e) {
-		var that = $(e.target);
-		var desc = that.val();
+    var ListView = Backbone.View.extend({    
+        el: $('#todo-list'), // attaches `this.el` to an existing element.
+        events: {
+            'click button#add': 'addItem',
+            'change input#add-text': 'addItem'
+        },
 
-		$.ajax({
-			url: "/add",
-			method: "get",
-			data: {
-				desc: desc
-			},
-			success: function(data) {
-				that.parent().before(
-					$("<li>").addClass("todo-item").addClass('not-done')
-						.data('num',data.num).data('done', 'false').append(
-					$("<input>").attr('type','checkbox')
-						.addClass("done-toggle")).append(
-					$("<p>").addClass("desc").append(
-					desc)).on('click', toggle_done));
-				that.val('');
-			}
-		});
-	};
+        initialize: function(){
+            // Bind 'this' to functions
+            _.bindAll(this, 'render', 'addItem', 'appendItem'); 
 
-	var construct = function() {
-		$('#new-desc').on('change', add_item);
-		$('.done-toggle').on('click', toggle_done);
-	};
+            this.collection = new List();
+            this.collection.bind('add', this.appendItem);
+            Backbone.sync("read", this.collection.models); // Read current list
+       
+            this.render(); // self render
+        },
 
-	return {
-		init: construct
-	};
-}();
+        render: function(){
+            var self = this;
+
+            $(this.el).append("<ul></ul>");
+            _(this.collection.models).each(function(item) {
+                self.appendItem(item);
+            }, this);
+        },
+
+        addItem: function() {
+            var text = $('#add-text', this.el).val();
+            if (this.checkText(text)) {
+                var item = new Item({
+                    desc: text
+                });
+                Backbone.sync("create", item);
+                this.collection.add(item);
+                $('#add-text', this.el).val('');
+                $('#error', this.el).html('');
+            } else {
+                $('#error', this.el).html('Must have text!');
+            }
+        },
+
+        checkText: function(text) {
+            return (text.length > 0);
+        },
+
+        appendItem: function(item) {
+            var itemView = new ItemView({
+                model: item
+            });
+            $('ul', this.el).append(itemView.render().el);
+        }
+    });
+
+    var listView = new ListView();      
+})(jQuery);

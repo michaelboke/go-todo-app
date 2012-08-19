@@ -16,6 +16,10 @@ type Item struct {
 	Done bool
 }
 
+type ItemCreation struct {
+	Desc string
+}
+
 // A Todo List contain a number of items
 // It is thread-safe, because all changes use channels
 type List struct {
@@ -92,6 +96,14 @@ func (l *List) getItem(id string) (it Item, err error) {
 	return it, err
 }
 
+func (l *List) getAll() map[string]Item {
+	its := make(chan map[string]Item)
+	l.exec <- func() {
+		its <- l.items
+	}
+	return <- its
+}
+
 func (l *List) updateItem(id string, it Item) (Item, error) {
 	suc := make(chan bool)
 	errs := make(chan error)
@@ -125,14 +137,14 @@ func (l *List) deleteItem(id string) {
 // attr is a json-formatted string of attributes
 // Return a json-formattable object of all model attributes
 func (l *List) Create(attr string) (interface{}, error) {
-	itreq := make(map[string]string)
+	itreq := ItemCreation{}
 	err := json.Unmarshal([]byte(attr), &itreq)
 	if err != nil {
 		return nil, err
 	}
 
-	desc, ok := itreq["desc"]
-	if !ok {
+	desc := itreq.Desc
+	if desc == "" {
 		return nil, errors.New("Create request requires 'desc' attribute.")
 	}
 
@@ -145,6 +157,10 @@ func (l *List) Create(attr string) (interface{}, error) {
 // ID may be empty string
 // Return a json-formattable object of all model attributes
 func (l *List) Read(id string) (interface{}, error) {
+	if id == "" {
+		return l.getAll(), nil
+	}
+	
 	return l.getItem(id)
 }
 
