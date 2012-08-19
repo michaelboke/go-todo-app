@@ -13,7 +13,6 @@ import (
 
 var (
 	port             int
-	prod             bool
 	templateRoot     string
 	serveStaticFiles bool
 	useCGI           bool
@@ -44,18 +43,11 @@ func Start() {
 func main() {
 
 	// Parse out the command line arguments
-	flag.IntVar(&port, "port", 8080, "Port to listen on.")
+	flag.IntVar(&port, "port", 8000, "Port to listen on.")
 	flag.StringVar(&templateRoot, "root", "./view/templates", "Template root directory.")
-	flag.BoolVar(&prod, "prod", false, "Production")
 	flag.BoolVar(&serveStaticFiles, "static", false, "Serve Static files from Go")
 	flag.BoolVar(&useCGI, "cgi", false, "User FastCGI")
 	flag.Parse()
-
-	// Correct conflicts
-	serveStaticFiles = !prod && serveStaticFiles // No serving static in prod
-	if port == 8080 && prod {
-		port = 80 // Default port is 80 in prod
-	}
 
 	// Run the server
 	Start()
