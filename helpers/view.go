@@ -17,14 +17,14 @@ func SetTemplateRoot(dir string) {
 //  fn is a file name
 //  data is the data that will be used to render the template
 // Returns: Web handler
-func TemplateView(fn string, data interface{}) func(*web.Context) {
+func TemplateView(fn string, data func()interface{}) func(*web.Context) {
 	t, err := mustache.ParseFile(root + fn)
 	if err != nil {
 		log.Fatalf("Error parsing %s: %s", fn, err.Error())
 	}
 
 	return func(ctx *web.Context) {
-		ctx.WriteString(t.Render(data))
+		ctx.WriteString(t.Render(data()))
 	}
 }
 
@@ -33,7 +33,7 @@ func TemplateView(fn string, data interface{}) func(*web.Context) {
 //  fn is a file name
 //  data is the data that will be used to render the template
 // Returns: Web handler
-func TemplateLayoutView(fn, layoutFn string, data interface{}) func(*web.Context) {
+func TemplateLayoutView(fn, layoutFn string, data func()interface{}) func(*web.Context) {
 	base, err := mustache.ParseFile(root + layoutFn)
 	if err != nil {
 		log.Fatalf("Error parsing %s: %s", layoutFn, err.Error())
@@ -45,6 +45,6 @@ func TemplateLayoutView(fn, layoutFn string, data interface{}) func(*web.Context
 	}
 
 	return func(ctx *web.Context) {
-		ctx.WriteString(t.RenderInLayout(base, data))
+		ctx.WriteString(t.RenderInLayout(base, data()))
 	}
 }

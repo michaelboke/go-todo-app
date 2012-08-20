@@ -1,10 +1,11 @@
 
-(function($){
+Todo = {};
+
+Todo.init = (function(bootstrap){
 
     var Item = Backbone.Model.extend({
-        url: "/todo/list",
+        urlRoot: "/todo/list",
         defaults: {
-            id: '-1',
             desc: '',
             done: false
         }
@@ -21,20 +22,31 @@
             'click input.done-toggle': 'done'
         },
         initialize: function() {
-            _.bindAll(this, 'render', 'unrender', 'done', 'remove');
+            _.bindAll(this, 'render', 'flip', 'unrender', 'done', 'remove');
 
+            this.model.bind('change', this.flip);
             this.model.bind('done', this.render);
             this.model.bind('remove', this.unrender);
         },
+        flip: function() {
+            if (this.model.get('done')) {
+                $('input',this.el).attr('checked','checked');
+                $(this.el).removeClass('not-done').addClass('done');
+            } else {
+                $('input',this.el).removeAttr('checked');
+                $(this.el).removeClass('done').addClass('not-done');
+            }
+        },
         render: function() {
-            var input = $('<input>').attr('type','checkbox');
+            var input = $('<input>').addClass('done-toggle').attr('type','checkbox');
             var p = $('<p>').append(this.model.get('desc'));
             if (this.model.get('done')) {
                 input.attr('checked','checked');
-                $(this.el).addClass('done')
+                $(this.el).addClass('done');
             } else {
-                $(this.el).addClass('not-done')
+                $(this.el).addClass('not-done');
             }
+
             $(this.el).append(input).append(p);
             return this; // for chaining
         },
@@ -45,7 +57,7 @@
             var swapped = {
                 done: !this.model.get('done')
             };
-            this.model.update(swapped);
+            this.model.save(swapped);
         },
         remove: function() {
             this.model.delete();
@@ -65,9 +77,10 @@
 
             this.collection = new List();
             this.collection.bind('add', this.appendItem);
-            Backbone.sync("read", this.collection.models); // Read current list
-       
-            this.render(); // self render
+
+            this.collection.reset(bootstrap);
+
+            this.render();
         },
 
         render: function(){
@@ -85,7 +98,7 @@
                 var item = new Item({
                     desc: text
                 });
-                Backbone.sync("create", item);
+                item.save({});
                 this.collection.add(item);
                 $('#add-text', this.el).val('');
                 $('#error', this.el).html('');
@@ -106,5 +119,5 @@
         }
     });
 
-    var listView = new ListView();      
-})(jQuery);
+    listView = new ListView();      
+});

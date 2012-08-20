@@ -15,7 +15,7 @@ type Controller interface {
 	// Create model object based on parameters
 	// attr is a json-formatted string of attributes
 	// Return a json-formattable object of all model attributes
-	Create(attr string) (interface{}, error)
+	Create(id, attr string) (interface{}, error)
 	// Read a model object back
 	// ID may be empty string
 	// Return a json-formattable object of all model attributes
@@ -35,6 +35,11 @@ type Context struct {
 	*web.Context
 }
 
+func NewContext(wctx *web.Context) *Context {
+	wctx.Header().Set("Content-Type","application/json")
+	return &Context{wctx}
+}
+
 func (ctx *Context) readBody() (string, error) {
 	str, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
@@ -49,6 +54,7 @@ func (ctx *Context) writeJson(m interface{}) {
 	if err != nil {
 		ctx.Abort(500, "Error marshalling map: "+err.Error())
 	}
+	log.Println("ret:",string(str))
 	ctx.WriteString(string(str))
 }
 
@@ -67,7 +73,7 @@ func (ctx *Context) writeError(err error) {
 func BindController(svr *web.Server, path string, ctrl Controller) {
 	// Create
 	svr.Post(path, func(wctx *web.Context) {
-		ctx := &Context{wctx}
+		ctx := NewContext(wctx)
 		body, err := ctx.readBody()
 		if err != nil {
 			ctx.writeError(err)
@@ -75,32 +81,31 @@ func BindController(svr *web.Server, path string, ctrl Controller) {
 		}
 		log.Println("body: ", body)
 
-		ret, err := ctrl.Create(body)
+		id := <- RandStr
+		ret, err := ctrl.Create(id, body)
 		if err != nil {
 			ctx.writeError(err)
 			return
 		}
 
-		log.Println("ret: ", ret)
 		ctx.writeJson(ret)
 	})
 
 	// Read
 	svr.Get(path+"/?(.*)", func(wctx *web.Context, id string) {
-		ctx := &Context{wctx}
+		ctx := NewContext(wctx)
 		ret, err := ctrl.Read(id)
 		if err != nil {
 			ctx.writeError(err)
 			return
 		}
 	
-		log.Println("ret: ", ret)
 		ctx.writeJson(ret)
 	})
 
 	// Update
 	svr.Put(path+"/(.+)", func(wctx *web.Context, id string) {
-		ctx := &Context{wctx}
+		ctx := NewContext(wctx)
 		body, err := ctx.readBody()
 
 		if err != nil {
@@ -118,7 +123,6 @@ func BindController(svr *web.Server, path string, ctrl Controller) {
 
 		// Accept nil responses
 		if ret != nil {
-			log.Println("ret: ", ret)
 			ctx.writeJson(ret)
 		} else {
 			ctx.NotModified()
@@ -127,7 +131,7 @@ func BindController(svr *web.Server, path string, ctrl Controller) {
 
 	// Delete
 	svr.Delete(path+"/(.+)", func(wctx *web.Context, id string) {
-		ctx := &Context{wctx}
+		ctx := NewContext(wctx)
 		err := ctrl.Delete(id)
 		if err != nil {
 			ctx.writeError(err)

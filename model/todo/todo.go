@@ -3,21 +3,16 @@ package todo
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 )
 
 // A Todo Item with a description, number and done boolean
 type Item struct {
 	// The index in the Todo List
-	Id string
+	Id string `json:"id"`
 	// A description of the item
-	Desc string
+	Desc string `json:"desc"`
 	// Whether the item is done or not
-	Done bool
-}
-
-type ItemCreation struct {
-	Desc string
+	Done bool `json:"done"`
 }
 
 // A Todo List contain a number of items
@@ -25,7 +20,6 @@ type ItemCreation struct {
 type List struct {
 	exec    chan func()
 	items   map[string]Item
-	counter int
 }
 
 // Create a new Todo List with no items.
@@ -34,7 +28,6 @@ func NewList() *List {
 	l := &List{
 		exec:    make(chan func(), 10),
 		items:   make(map[string]Item),
-		counter: 0,
 	}
 
 	// Start listening for updates
@@ -54,24 +47,13 @@ func (l *List) listen() {
 // Add a new todo item with a description
 // Arguments: 
 //	desc - Description of the new todo item
-func (l *List) createItem(desc string) Item {
+func (l *List) createItem(ireq Item) Item {
 
-	its := make(chan Item)
 	l.exec <- func() {
-		id := l.counter
-		l.counter += 1
-
-		it := Item{
-			Id:   fmt.Sprintf("%d", id),
-			Desc: desc,
-			Done: false,
-		}
-
-		l.items[it.Id] = it
-		its <- it
+		l.items[ireq.Id] = ireq
 	}
 
-	return <-its
+	return ireq
 }
 
 func (l *List) getItem(id string) (it Item, err error) {
@@ -96,12 +78,19 @@ func (l *List) getItem(id string) (it Item, err error) {
 	return it, err
 }
 
-func (l *List) getAll() map[string]Item {
+func (l *List) GetAll() []Item {
 	its := make(chan map[string]Item)
 	l.exec <- func() {
 		its <- l.items
 	}
-	return <- its
+	mit := <- its
+	lit := make([]Item, len(mit))
+	i := 0
+	for _, v := range mit {
+		lit[i] = v
+		i += 1
+	}
+	return lit
 }
 
 func (l *List) updateItem(id string, it Item) (Item, error) {
@@ -136,19 +125,20 @@ func (l *List) deleteItem(id string) {
 // Create an item
 // attr is a json-formatted string of attributes
 // Return a json-formattable object of all model attributes
-func (l *List) Create(attr string) (interface{}, error) {
-	itreq := ItemCreation{}
+func (l *List) Create(id, attr string) (interface{}, error) {
+	itreq := Item{
+		Id: id,
+	}
 	err := json.Unmarshal([]byte(attr), &itreq)
 	if err != nil {
 		return nil, err
 	}
 
-	desc := itreq.Desc
-	if desc == "" {
+	if itreq.Desc == "" {
 		return nil, errors.New("Create request requires 'desc' attribute.")
 	}
 
-	it := l.createItem(desc)
+	it := l.createItem(itreq)
 
 	return it, nil
 }
@@ -158,7 +148,7 @@ func (l *List) Create(attr string) (interface{}, error) {
 // Return a json-formattable object of all model attributes
 func (l *List) Read(id string) (interface{}, error) {
 	if id == "" {
-		return l.getAll(), nil
+		return l.GetAll(), nil
 	}
 	
 	return l.getItem(id)
