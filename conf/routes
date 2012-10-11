@@ -1,0 +1,24 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET     /                       Application.Index
+GET     /todo                   Todo.Index
+
+GET     /register               Application.Register
+POST    /register               Application.SaveUser
+POST    /login                  Application.Login
+GET     /logout                 Application.Logout
+
+# Backbone communication
+GET     /bb/todo/list           Todo.JsonReadList
+GET     /bb/todo/list/{id}      Todo.JsonReadItem
+POST    /bb/todo/list           Todo.JsonCreateItem
+PUT     /bb/todo/list/{id}      Todo.JsonUpdateItem
+DELETE  /bb/todo/list/{id}      Todo.JsonDeleteItem
+
+# Map static resources from the /app/public folder to the /public path
+GET     /static/                staticDir:static
+
+# Catch all
+*   /{controller}/{action}      {controller}.{action}
